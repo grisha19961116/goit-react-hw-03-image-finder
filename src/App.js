@@ -1,59 +1,102 @@
 import { Component } from 'react';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer, toast } from 'react-toastify';
-import ContactList from './components/ContactList/ContactList.js';
-import ContactForm from './components/ContactForm/ContactForm.js';
-import Filter from './components/Filter/Filter.js';
-import style from './App.module.css';
+import s from './App.module.css';
+import api from './API/api.js';
+
+import Searchbar from './components/Searchbar/Searchbar.jsx';
+import ImageGallery from './components/ImageGallery/ImageGallery.jsx';
+import Button from './components/Button/Button.jsx';
+import Load from './components/Loader/Loader.jsx';
+import Modal from './components/Modal//Modal.jsx';
+
 export default class App extends Component {
   state = {
-    contacts: [
-      { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
-      { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
-      { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
-      { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
-    ],
-    filter: '',
+    valueSubmit: '',
+    dataFetch: [],
+    page: 1,
+    flag: false,
+    fullHd: '',
   };
-  handleAddContact = newContact =>
-    this.setState(({ contacts }) => ({
-      contacts: [...contacts, newContact],
+
+  handleSubmit = even => {
+    even.preventDefault();
+    const searchWord = even.target.lastChild.value;
+    const { page } = this.state;
+
+    api.getFullRequest(searchWord, page).then(dataRequest => {
+      this.setState(({ valueSubmit, dataFetch }) => ({
+        valueSubmit: searchWord,
+        dataFetch: dataRequest.hits,
+      }));
+    });
+  };
+
+  handleLoadButton = () => {
+    const { valueSubmit, page } = this.state;
+    const changePage = page + 1;
+    this.setState(() => ({
+      flag: true,
     }));
-  handleCheckUniqueContact = name => {
-    const { contacts } = this.state;
-    const isExistContact = !!contacts.find(contacts => contacts.name === name);
-    isExistContact && alert('Contact is already exist');
-    return !isExistContact;
+
+    api.getFullRequest(valueSubmit, changePage + 1).then(dataRequest => {
+      this.setState(({ dataFetch }) => ({
+        dataFetch: [...dataFetch, ...dataRequest.hits],
+        page: changePage,
+        flag: false,
+      }));
+    });
   };
-  handleRemoveContact = id =>
-    this.setState(({ contacts }) => ({
-      contacts: contacts.filter(contact => contact.id !== id),
-    }));
-  handleFilterChange = filter => this.setState({ filter });
-  getVisibleContacts = () => {
-    const { contacts, filter } = this.state;
-    return contacts.filter(contact =>
-      contact.name.toLowerCase().includes(filter.toLowerCase()),
-    );
+
+  handleListenerForList = even => {
+    if (even.target.tagName === 'IMG') {
+      this.setState(() => ({
+        fullHd: even.target.alt,
+      }));
+    }
   };
+
+  handleListenerForCloseModalClick = even => {
+    if (even.target.tagName !== 'IMG') {
+      this.setState(() => ({
+        fullHd: '',
+      }));
+    }
+    console.log(`handleListenerForCloseModalClick`);
+  };
+
+  handleListenerForCloseModalKeydown = even => {
+    if (even.code === 'Escape') {
+      this.setState(() => ({
+        fullHd: '',
+      }));
+      return true;
+    }
+    console.log(`handleListenerForCloseModalKeydown`);
+  };
+
   render() {
-    const { filter } = this.state;
-    const visibleContacts = this.getVisibleContacts();
+    const { dataFetch, flag, fullHd } = this.state;
+
+    window.scrollTo(0, 10000);
     return (
-      <>
-        <h2>From Contact</h2>
-        <ContactForm
-          onAdd={this.handleAddContact}
-          onCheckUnique={this.handleCheckUniqueContact}
+      <div onKeyUp={this.handleListenerForCloseModalKeydown}>
+        <Searchbar onSubmit={this.handleSubmit} onChange={this.handleInput} />
+        {fullHd !== '' && (
+          <Modal
+            src={fullHd}
+            closeDown={this.handleListenerForCloseModalKeydown}
+            onClickClose={this.handleListenerForCloseModalClick}
+          />
+        )}
+        <ImageGallery
+          dataFetch={dataFetch}
+          onClick={this.handleListenerForList}
         />
-        <h2>Contacts list</h2>
-        <Filter filter={filter} onChange={this.handleFilterChange} />
-        <ContactList
-          contacts={visibleContacts}
-          onRemove={this.handleRemoveContact}
-        />
-        <ToastContainer></ToastContainer>
-      </>
+        {dataFetch.length > 0 && <Button onClick={this.handleLoadButton} />}
+        {flag && <Load />}
+        {/* <ToastContainer></ToastContainer> */}
+      </div>
     );
   }
 }
