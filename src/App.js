@@ -80,15 +80,12 @@ export default class App extends Component {
       this.setState(() => ({
         fullHd: '',
       }));
-      console.log(`succses`);
     }
-    console.log(even.code, `handleListenerForCloseModalKeydown`);
   };
 
   render() {
     const { dataFetch, flag, fullHd } = this.state;
 
-    window.scrollTo(0, 10000);
     return (
       <div>
         <Searchbar onSubmit={this.handleSubmit} onChange={this.handleInput} />
