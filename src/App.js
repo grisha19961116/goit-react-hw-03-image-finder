@@ -80,9 +80,9 @@ export default class App extends Component {
       this.setState(() => ({
         fullHd: '',
       }));
-      return true;
+      console.log(`succses`);
     }
-    console.log(`handleListenerForCloseModalKeydown`);
+    console.log(even.code, `handleListenerForCloseModalKeydown`);
   };
 
   render() {
@@ -90,13 +90,13 @@ export default class App extends Component {
 
     window.scrollTo(0, 10000);
     return (
-      <div onKeyUp={this.handleListenerForCloseModalKeydown}>
+      <div>
         <Searchbar onSubmit={this.handleSubmit} onChange={this.handleInput} />
         {fullHd !== '' && (
           <Modal
             src={fullHd}
-            closeDown={this.handleListenerForCloseModalKeydown}
             onClickClose={this.handleListenerForCloseModalClick}
+            keyClose={this.handleListenerForCloseModalKeydown}
           />
         )}
         <ImageGallery
