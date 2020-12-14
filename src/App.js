@@ -39,12 +39,22 @@ export default class App extends Component {
       flag: true,
     }));
 
+    const scrollList = () => {
+      window.scrollTo({
+        top: document.documentElement.scrollHeight,
+        behavior: 'smooth',
+      });
+    };
+
     api.getFullRequest(valueSubmit, changePage + 1).then(dataRequest => {
-      this.setState(({ dataFetch }) => ({
-        dataFetch: [...dataFetch, ...dataRequest.hits],
-        page: changePage,
-        flag: false,
-      }));
+      this.setState(
+        ({ dataFetch }) => ({
+          dataFetch: [...dataFetch, ...dataRequest.hits],
+          page: changePage,
+          flag: false,
+        }),
+        () => scrollList(),
+      );
     });
   };
 
