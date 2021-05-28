@@ -1,17 +1,16 @@
+import EscapeOutside from 'react-escape-outside';
+
 import s from './Modal.module.css';
 
-const Modal = ({ src, onClickClose, keyClose }) => {
+const Modal = ({ src, closeModalClick, closeModalEsc }) => {
   return (
-    <div
-      className={s.Overlay}
-      tabIndex={0}
-      onKeyDown={even => keyClose(even)}
-      onClick={even => onClickClose(even)}
-    >
-      <div className={s.Modal}>
-        <img src={src} alt="open full hd img" />
+    <EscapeOutside onEscapeOutside={e => closeModalEsc(e)}>
+      <div className={s.Overlay} onClick={e => closeModalClick(e)}>
+        <div className={s.Modal}>
+          <img src={src} alt="open full hd img" />
+        </div>
       </div>
-    </div>
+    </EscapeOutside>
   );
 };
 

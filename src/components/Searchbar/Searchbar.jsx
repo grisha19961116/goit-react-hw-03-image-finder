@@ -1,8 +1,8 @@
 import s from './Searchbar.module.css';
 
-const Searchbar = ({ onSubmit }) => {
+const SearchBar = ({ onSubmit }) => {
   return (
-    <header className={s.Searchbar}>
+    <header className={s.SearchBar}>
       <form className={s.SearchForm} onSubmit={even => onSubmit(even)}>
         <button type="submit" className={s.SearchForm__button}>
           <span className="s.SearchForm-button-label"></span>
@@ -19,4 +19,4 @@ const Searchbar = ({ onSubmit }) => {
     </header>
   );
 };
-export default Searchbar;
+export default SearchBar;

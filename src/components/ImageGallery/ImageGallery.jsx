@@ -1,9 +1,9 @@
 import s from './ImageGallery.module.css';
 
 import ImageGalleryItem from '../ImageGalleryItem/ImageGalleryItem.jsx';
-const ImageGallery = ({ dataFetch, onClick }) => {
+const ImageGallery = ({ dataFetch, onClickImg }) => {
   return (
-    <ul className={s.ImageGallery} onClick={even => onClick(even)}>
+    <ul className={s.ImageGallery} onClick={e => onClickImg(e)}>
       {dataFetch.length > 0 &&
         dataFetch.map(({ id, webformatURL, largeImageURL }) => (
           <ImageGalleryItem

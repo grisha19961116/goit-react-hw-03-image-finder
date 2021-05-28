@@ -4,20 +4,24 @@ import { ToastContainer, toast } from 'react-toastify';
 import s from './App.module.css';
 import api from './API/api.js';
 
-import Searchbar from './components/Searchbar/Searchbar.jsx';
+import SearchBar from './components/Searchbar/Searchbar.jsx';
 import ImageGallery from './components/ImageGallery/ImageGallery.jsx';
 import Button from './components/Button/Button.jsx';
 import Load from './components/Loader/Loader.jsx';
 import Modal from './components/Modal//Modal.jsx';
 
 export default class App extends Component {
-  state = {
-    valueSubmit: '',
-    dataFetch: [],
-    page: 1,
-    flag: false,
-    fullHd: '',
-  };
+  constructor() {
+    super();
+    this.state = {
+      valueSubmit: '',
+      dataFetch: [],
+      page: 1,
+      flag: false,
+      fullHd: '',
+    };
+    this.handleListenerCloseEsc = this.handleListenerCloseEsc.bind(this);
+  }
 
   handleSubmit = even => {
     even.preventDefault();
@@ -58,25 +62,24 @@ export default class App extends Component {
     });
   };
 
-  handleListenerForList = even => {
-    if (even.target.tagName === 'IMG') {
+  handleListenerForList = e => {
+    if (e.target.tagName === 'IMG') {
       this.setState(() => ({
-        fullHd: even.target.alt,
+        fullHd: e.target.alt,
       }));
     }
   };
 
-  handleListenerForCloseModalClick = even => {
-    if (even.target.tagName !== 'IMG') {
+  handleListenerForCloseModalClick = e => {
+    if (e.target.tagName !== 'IMG') {
       this.setState(() => ({
         fullHd: '',
       }));
     }
-    console.log(`handleListenerForCloseModalClick`);
   };
 
-  handleListenerForCloseModalKeydown = even => {
-    if (even.code === 'Escape') {
+  handleListenerCloseEsc = e => {
+    if (e === undefined) {
       this.setState(() => ({
         fullHd: '',
       }));
@@ -88,17 +91,17 @@ export default class App extends Component {
 
     return (
       <div>
-        <Searchbar onSubmit={this.handleSubmit} onChange={this.handleInput} />
+        <SearchBar onSubmit={this.handleSubmit} onChange={this.handleInput} />
         {fullHd !== '' && (
           <Modal
             src={fullHd}
-            onClickClose={this.handleListenerForCloseModalClick}
-            keyClose={this.handleListenerForCloseModalKeydown}
+            closeModalClick={this.handleListenerForCloseModalClick}
+            closeModalEsc={this.handleListenerCloseEsc}
           />
         )}
         <ImageGallery
           dataFetch={dataFetch}
-          onClick={this.handleListenerForList}
+          onClickImg={this.handleListenerForList}
         />
         {dataFetch.length > 0 && <Button onClick={this.handleLoadButton} />}
         {flag && <Load />}
