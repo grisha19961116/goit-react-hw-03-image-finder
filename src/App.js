@@ -10,6 +10,8 @@ import Button from './components/Button/Button.jsx';
 import Load from './components/Loader/Loader.jsx';
 import Modal from './components/Modal//Modal.jsx';
 
+let debounce = require('lodash.debounce');
+
 export default class App extends Component {
   constructor() {
     super();
@@ -23,25 +25,61 @@ export default class App extends Component {
     this.handleListenerCloseEsc = this.handleListenerCloseEsc.bind(this);
   }
 
-  handleSubmit = even => {
-    even.preventDefault();
-    const searchWord = even.target.lastChild.value;
+  handleSubmit = async e => {
+    e.preventDefault();
+    const searchInputDom = document.getElementById('input-searchBar');
+    const searchWord = searchInputDom.value.toLowerCase().replace(/\s/g, '');
     const { page } = this.state;
 
-    api.getFullRequest(searchWord, page).then(dataRequest => {
-      this.setState(({ valueSubmit, dataFetch }) => ({
-        valueSubmit: searchWord,
-        dataFetch: dataRequest.hits,
+    try {
+      this.setState(() => ({
+        flag: true,
       }));
-    });
+
+      await api.getFullRequest(searchWord, page).then(({ hits, totalHits }) => {
+        if (totalHits === 0) throw new Error('Wrong request');
+        this.setState(() => ({
+          valueSubmit: searchWord,
+          dataFetch: hits,
+        }));
+
+        searchWord === '' &&
+          toast.warn('⚠️ Default page!', {
+            position: 'top-right',
+            autoClose: 1500,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+      });
+    } catch (err) {
+      searchInputDom.value = '';
+      toast.error(
+        `🚀 ${
+          err.message === 'Wrong request' ? 'Wrong request' : 'Server error'
+        }!`,
+        {
+          position: 'top-right',
+          autoClose: 1500,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        },
+      );
+    } finally {
+      this.setState(() => ({
+        flag: false,
+      }));
+    }
   };
 
-  handleLoadButton = () => {
+  handleLoadButton = async () => {
     const { valueSubmit, page } = this.state;
     const changePage = page + 1;
-    this.setState(() => ({
-      flag: true,
-    }));
 
     const scrollList = () => {
       window.scrollTo({
@@ -50,16 +88,46 @@ export default class App extends Component {
       });
     };
 
-    api.getFullRequest(valueSubmit, changePage + 1).then(dataRequest => {
-      this.setState(
-        ({ dataFetch }) => ({
-          dataFetch: [...dataFetch, ...dataRequest.hits],
-          page: changePage,
-          flag: false,
-        }),
-        () => scrollList(),
-      );
-    });
+    try {
+      this.setState(() => ({
+        flag: true,
+      }));
+
+      await api.getFullRequest(valueSubmit, changePage + 1).then(({ hits }) => {
+        if (hits.length === 0)
+          return toast.warn('⚠️ The last page!', {
+            position: 'top-right',
+            autoClose: 1500,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+
+        this.setState(
+          ({ dataFetch }) => ({
+            dataFetch: [...dataFetch, ...hits],
+            page: changePage,
+          }),
+          () => scrollList(),
+        );
+      });
+    } catch (err) {
+      toast.error('🚀 Server error!', {
+        position: 'top-right',
+        autoClose: 1500,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+    } finally {
+      this.setState(() => ({
+        flag: false,
+      }));
+    }
   };
 
   handleListenerForList = e => {
@@ -79,6 +147,7 @@ export default class App extends Component {
   };
 
   handleListenerCloseEsc = e => {
+    console.log(e);
     if (e === undefined) {
       this.setState(() => ({
         fullHd: '',
@@ -86,12 +155,106 @@ export default class App extends Component {
     }
   };
 
+  handleScroll = e => {
+    const searchInputDom = document.getElementById('input-searchBar');
+    const rootDiv = document.getElementById('root');
+    const { valueSubmit, page } = this.state;
+
+    const options = {
+      root: null,
+      rootMargin: '0px',
+      threshold: 1,
+    };
+    console.log(rootDiv);
+    // try {
+    //   this.setState(() => ({
+    //     flag: true,
+    //   }));
+
+    //   await api.getFullRequest(valueSubmit, changePage + 1).then(({ hits }) => {
+    //     if (hits.length === 0)
+    //       return toast.warn('⚠️ The last page!', {
+    //         position: 'top-right',
+    //         autoClose: 1500,
+    //         hideProgressBar: false,
+    //         closeOnClick: true,
+    //         pauseOnHover: true,
+    //         draggable: true,
+    //         progress: undefined,
+    //       });
+
+    //     this.setState(
+    //       ({ dataFetch }) => ({
+    //         dataFetch: [...dataFetch, ...hits],
+    //         page: changePage,
+    //       }),
+    //       () => scrollList(),
+    //     );
+    //   });
+    // } catch (err) {
+    //   toast.error('🚀 Server error!', {
+    //     position: 'top-right',
+    //     autoClose: 1500,
+    //     hideProgressBar: false,
+    //     closeOnClick: true,
+    //     pauseOnHover: true,
+    //     draggable: true,
+    //     progress: undefined,
+    //   });
+    // } finally {
+    //   this.setState(() => ({
+    //     flag: false,
+    //   }));
+    // }
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(() => {
+        const scrolled = window.scrollY;
+        const viewPortHeight = rootDiv.clientHeight;
+        console.log(scrolled, `scrolled`);
+        console.log(viewPortHeight, `viewPortHeight`);
+        if (scrolled > viewPortHeight - 1498) {
+          const changePage = page + 1;
+          console.log(scrolled, `scrolled`);
+          console.log(viewPortHeight, `viewPortHeight`);
+          // renderFn();
+          return;
+        }
+      });
+    }, options);
+    observer.observe(rootDiv);
+
+    // let scrollTop = e.srcElement.body.scrollTop;
+    // console.log(e);
+    // console.log(scrollTop);
+    //     itemTranslate = Math.min(0, scrollTop/3 - 60);
+
+    // this.setState({
+    //   transform: itemTranslate
+    // });
+  };
+
+  componentDidMount() {
+    window.addEventListener(
+      'scroll',
+      debounce(e => {
+        this.handleScroll(e);
+      }, 1000),
+    );
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('scroll', this.handleScroll);
+  }
+
   render() {
     const { dataFetch, flag, fullHd } = this.state;
 
     return (
       <div>
-        <SearchBar onSubmit={this.handleSubmit} onChange={this.handleInput} />
+        <Load domLoad={true} duration={500} call />
+
+        <SearchBar onSubmit={this.handleSubmit} />
         {fullHd !== '' && (
           <Modal
             src={fullHd}
@@ -99,13 +262,25 @@ export default class App extends Component {
             closeModalEsc={this.handleListenerCloseEsc}
           />
         )}
-        <ImageGallery
-          dataFetch={dataFetch}
-          onClickImg={this.handleListenerForList}
-        />
-        {dataFetch.length > 0 && <Button onClick={this.handleLoadButton} />}
-        {flag && <Load />}
-        {/* <ToastContainer></ToastContainer> */}
+        <div className={s.wrapper__gallery}>
+          <ImageGallery
+            dataFetch={dataFetch}
+            onClickImg={this.handleListenerForList}
+          />
+          {dataFetch.length > 0 && <Button onClick={this.handleLoadButton} />}
+          {flag && <Load />}
+          <ToastContainer
+            position="top-right"
+            autoClose={1500}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+          />
+        </div>
       </div>
     );
   }

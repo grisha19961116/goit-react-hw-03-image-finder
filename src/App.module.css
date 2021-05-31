@@ -32,3 +32,8 @@ img {
   grid-gap: 16px;
   padding-bottom: 24px;
 }
+
+.wrapper__gallery {
+  position: relative;
+  padding-bottom: 150px;
+}
