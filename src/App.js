@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { Component, createRef } from 'react';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer, toast } from 'react-toastify';
 import s from './App.module.css';
@@ -15,6 +15,7 @@ let debounce = require('lodash.debounce');
 export default class App extends Component {
   constructor() {
     super();
+    this.myRef = createRef();
     this.state = {
       valueSubmit: '',
       dataFetch: [],
@@ -24,6 +25,29 @@ export default class App extends Component {
     };
     this.handleListenerCloseEsc = this.handleListenerCloseEsc.bind(this);
   }
+  scrollList = () => {
+    let forwardBack;
+    const resolution = this.myRef.current;
+    switch (resolution) {
+      case 'HD':
+        forwardBack = 1080;
+        break;
+      case 'fullHD':
+        forwardBack = 1150;
+        break;
+      case '4k':
+        forwardBack = 1520;
+        break;
+
+      default:
+        break;
+    }
+    console.log(document.documentElement.scrollHeight);
+    window.scrollTo({
+      top: document.documentElement.scrollHeight - forwardBack,
+      behavior: 'smooth',
+    });
+  };
 
   handleSubmit = async e => {
     e.preventDefault();
@@ -38,10 +62,14 @@ export default class App extends Component {
 
       await api.getFullRequest(searchWord, page).then(({ hits, totalHits }) => {
         if (totalHits === 0) throw new Error('Wrong request');
-        this.setState(() => ({
-          valueSubmit: searchWord,
-          dataFetch: hits,
-        }));
+
+        this.setState(
+          () => ({
+            valueSubmit: searchWord,
+            dataFetch: hits,
+          }),
+          () => this.scrollList(),
+        );
 
         searchWord === '' &&
           toast.warn('⚠️ Default page!', {
@@ -77,17 +105,9 @@ export default class App extends Component {
     }
   };
 
-  handleLoadButton = async () => {
+  renderLazyAndButton = async () => {
     const { valueSubmit, page } = this.state;
     const changePage = page + 1;
-
-    const scrollList = () => {
-      window.scrollTo({
-        top: document.documentElement.scrollHeight,
-        behavior: 'smooth',
-      });
-    };
-
     try {
       this.setState(() => ({
         flag: true,
@@ -110,7 +130,7 @@ export default class App extends Component {
             dataFetch: [...dataFetch, ...hits],
             page: changePage,
           }),
-          () => scrollList(),
+          () => this.scrollList(),
         );
       });
     } catch (err) {
@@ -130,6 +150,8 @@ export default class App extends Component {
     }
   };
 
+  handleLoadButton = async () => await this.renderLazyAndButton();
+
   handleListenerForList = e => {
     if (e.target.tagName === 'IMG') {
       this.setState(() => ({
@@ -147,7 +169,6 @@ export default class App extends Component {
   };
 
   handleListenerCloseEsc = e => {
-    console.log(e);
     if (e === undefined) {
       this.setState(() => ({
         fullHd: '',
@@ -155,96 +176,61 @@ export default class App extends Component {
     }
   };
 
-  handleScroll = e => {
-    const searchInputDom = document.getElementById('input-searchBar');
+  handleScrollRoot = () => {
     const rootDiv = document.getElementById('root');
-    const { valueSubmit, page } = this.state;
-
     const options = {
       root: null,
       rootMargin: '0px',
       threshold: 1,
     };
-    console.log(rootDiv);
-    // try {
-    //   this.setState(() => ({
-    //     flag: true,
-    //   }));
+    let forwardBack;
+    const resolution = this.myRef.current;
+    switch (resolution) {
+      case 'HD':
+        forwardBack = 900;
+        break;
+      case 'fullHD':
+        forwardBack = 976;
+        break;
+      case '4k':
+        forwardBack = 1336;
+        break;
 
-    //   await api.getFullRequest(valueSubmit, changePage + 1).then(({ hits }) => {
-    //     if (hits.length === 0)
-    //       return toast.warn('⚠️ The last page!', {
-    //         position: 'top-right',
-    //         autoClose: 1500,
-    //         hideProgressBar: false,
-    //         closeOnClick: true,
-    //         pauseOnHover: true,
-    //         draggable: true,
-    //         progress: undefined,
-    //       });
-
-    //     this.setState(
-    //       ({ dataFetch }) => ({
-    //         dataFetch: [...dataFetch, ...hits],
-    //         page: changePage,
-    //       }),
-    //       () => scrollList(),
-    //     );
-    //   });
-    // } catch (err) {
-    //   toast.error('🚀 Server error!', {
-    //     position: 'top-right',
-    //     autoClose: 1500,
-    //     hideProgressBar: false,
-    //     closeOnClick: true,
-    //     pauseOnHover: true,
-    //     draggable: true,
-    //     progress: undefined,
-    //   });
-    // } finally {
-    //   this.setState(() => ({
-    //     flag: false,
-    //   }));
-    // }
-
+      default:
+        break;
+    }
     const observer = new IntersectionObserver(entries => {
       entries.forEach(() => {
         const scrolled = window.scrollY;
         const viewPortHeight = rootDiv.clientHeight;
-        console.log(scrolled, `scrolled`);
-        console.log(viewPortHeight, `viewPortHeight`);
-        if (scrolled > viewPortHeight - 1498) {
-          const changePage = page + 1;
-          console.log(scrolled, `scrolled`);
-          console.log(viewPortHeight, `viewPortHeight`);
-          // renderFn();
-          return;
-        }
+        const different = viewPortHeight - scrolled - forwardBack;
+        if (different === 0) this.renderLazyAndButton();
       });
     }, options);
     observer.observe(rootDiv);
-
-    // let scrollTop = e.srcElement.body.scrollTop;
-    // console.log(e);
-    // console.log(scrollTop);
-    //     itemTranslate = Math.min(0, scrollTop/3 - 60);
-
-    // this.setState({
-    //   transform: itemTranslate
-    // });
   };
 
   componentDidMount() {
+    const widthScr = window.screen.width;
+    if (widthScr === 2560) {
+      this.myRef.current = '4k';
+    }
+    if (widthScr === 1920) {
+      this.myRef.current = 'fullHD';
+    }
+    if (widthScr === 1600) {
+      this.myRef.current = 'HD';
+    }
     window.addEventListener(
       'scroll',
       debounce(e => {
-        this.handleScroll(e);
+        this.handleScrollRoot(e);
       }, 1000),
     );
   }
 
   componentWillUnmount() {
-    window.removeEventListener('scroll', this.handleScroll);
+    window.removeEventListener('scroll', this.handleScrollRoot);
   }
 
   render() {
@@ -254,7 +240,7 @@ export default class App extends Component {
       <div>
         <Load domLoad={true} duration={500} call />
 
-        <SearchBar onSubmit={this.handleSubmit} />
+        <SearchBar submitForm={this.handleSubmit} />
         {fullHd !== '' && (
           <Modal
             src={fullHd}
