@@ -23,11 +23,12 @@ export default class App extends Component {
       flag: false,
       fullHd: '',
     };
-    this.handleListenerCloseEsc = this.handleListenerCloseEsc.bind(this);
   }
+
   scrollList = () => {
     let forwardBack;
     const resolution = this.myRef.current;
+
     switch (resolution) {
       case 'HD':
         forwardBack = 1080;
@@ -42,7 +43,7 @@ export default class App extends Component {
       default:
         break;
     }
-    console.log(document.documentElement.scrollHeight);
+
     window.scrollTo({
       top: document.documentElement.scrollHeight - forwardBack,
       behavior: 'smooth',
@@ -108,6 +109,7 @@ export default class App extends Component {
   renderLazyAndButton = async () => {
     const { valueSubmit, page } = this.state;
     const changePage = page + 1;
+
     try {
       this.setState(() => ({
         flag: true,
@@ -183,8 +185,10 @@ export default class App extends Component {
       rootMargin: '0px',
       threshold: 1,
     };
+
     let forwardBack;
     const resolution = this.myRef.current;
+
     switch (resolution) {
       case 'HD':
         forwardBack = 900;
@@ -212,6 +216,7 @@ export default class App extends Component {
 
   componentDidMount() {
     const widthScr = window.screen.width;
+
     if (widthScr === 2560) {
       this.myRef.current = '4k';
     }
@@ -221,6 +226,7 @@ export default class App extends Component {
     if (widthScr === 1600) {
       this.myRef.current = 'HD';
     }
+
     window.addEventListener(
       'scroll',
       debounce(e => {
@@ -239,7 +245,6 @@ export default class App extends Component {
     return (
       <div>
         <Load domLoad={true} duration={500} call />
-
         <SearchBar submitForm={this.handleSubmit} />
         {fullHd !== '' && (
           <Modal
