@@ -178,7 +178,7 @@ export default class App extends Component {
     }
   };
 
-  handleScrollRoot = () => {
+  handleScrollRoot = e => {
     const rootDiv = document.getElementById('root');
     const options = {
       root: null,
@@ -194,10 +194,10 @@ export default class App extends Component {
         forwardBack = 900;
         break;
       case 'fullHD':
-        forwardBack = 976;
+        forwardBack = 965;
         break;
       case '4k':
-        forwardBack = 1336;
+        forwardBack = 1325;
         break;
 
       default:
@@ -207,7 +207,9 @@ export default class App extends Component {
       entries.forEach(() => {
         const scrolled = window.scrollY;
         const viewPortHeight = rootDiv.clientHeight;
-        const different = viewPortHeight - scrolled - forwardBack;
+        const different = viewPortHeight - Math.round(scrolled) - forwardBack;
+        console.log(different, `different`);
+
         if (different === 0) this.renderLazyAndButton();
       });
     }, options);
@@ -244,7 +246,7 @@ export default class App extends Component {
 
     return (
       <div>
-        <Load domLoad={true} duration={500} call />
+        <Load domLoad={true} duration={500} />
         <SearchBar submitForm={this.handleSubmit} />
         {fullHd !== '' && (
           <Modal
